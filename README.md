@@ -16,7 +16,7 @@ JavaScript 实现贪吃蛇
 ## 具体实现
 
 - 使用纯 JS 的方式实现整个游戏的布局, 为了效果, 适当添加容器布局居中,以及背景色效果.
-    ```
+    ```css
     * {
         margin: 0;
         padding: 0;
@@ -36,7 +36,7 @@ JavaScript 实现贪吃蛇
     ```
     
 - 预先定义的 CSS 只有以上这些. 接下来均为 JS 实现. 通过定义**地图**类, 传入三个参数, 构建一个基础的 **Map**
-    ```
+    ```javascript
      class Snake {
          constructor(param = {}) {
              // 参数为空时, 基础样式
@@ -62,11 +62,12 @@ JavaScript 实现贪吃蛇
     ```
   
 - 实现数组网格地图, 并添加初始化的 snake
-    ```
+    ```javascript
       // 数组地图行数, 列数
      // 默认每一个网格宽高 50
-     let col = parseInt(this.width) / 50;
-     let row = parseInt(this.height) / 50;
+      // col 与 row 在判断边界值时需要用到,所以此处设置为实例属性
+     let col = this.col = parseInt(this.width) / 50;
+     let row = this.row = parseInt(this.height) / 50;
 
      // 创建数组网格地图
      this.mapArr = []
@@ -87,9 +88,9 @@ JavaScript 实现贪吃蛇
 - 实现随机食物. 
     - 通过 **generatePlace()** 方法, 将 snake 的坐标值在 **地图网格数组** 中删除, 随机获取剩下数组的索引值, 根据索引获得 (x, y) 的坐标值.
     - 在 **foodRender()** 方法中, 根据 generatePlace() 中获取的坐标值, 设置 food 在 map 中的位置.
-    - 最后, 在 constructor 中调用 **this.foodRender()** 方法, 生成食物
+    - 最后, 在 constructor 中调用 **this.foodRender()** 方法, 生成 food
     
-    ```
+    ```javascript
       // 1.生成食物随机坐标
      generatePlace() {
          // 1.查询 snake 当前在数组地图中的索引, 根据索引将 snake 从数组网格地图中删除
@@ -137,9 +138,159 @@ JavaScript 实现贪吃蛇
      }
     ```
 
+- 实现 snake, 在 constructor 中调用 **this.snakeRender()** 方法, 生成 snake, 每次移动前需要删除上一次的 snake.
+    ```javascript
+    // 3. 生成 snake
+    snakeRender() {
+        // 删除之前的蛇
+        let aSnake = document.querySelectorAll('.snake')
+        aSnake.forEach(item => {
+            item.parentNode.removeChild(item)
+        })
+        /*
+        * 1. 根据 this.bodies 中 (x, y) 坐标值,绘制 snake
+        * 2. type === 1 的是 snake head
+        * 3. 添加至 map 中
+        * */
+        this.bodies.forEach(item => {
+            let oDiv = document.createElement('div');
+            oDiv.className = 'snake'
+            oDiv.style.position = 'absolute';
+            oDiv.style.top = 50 * item.y + 'px';
+            oDiv.style.left = 50 * item.x + 'px';
+            oDiv.style.width = '50px';
+            oDiv.style.height = '50px';
+            if (item.type === 1) {
+                oDiv.style.background = 'red'
+            } else {
+                oDiv.style.background = 'skyblue'
+            }
+            this.map.appendChild(oDiv)
+        })
+    } 
+    ```
 
-
-
-
-
+- 实现 snake 移动
+    - 首先实现方向的判定, 通过在 constructor 中判断用户按下了哪个**方向**键(默认向右), 并添加中间变量值 **this.currentDirection** 记录当前方向, 如果按下的方向 **(ev.key)** 与当前记录方向
+ **this.currentDirection** **相反**, 则方向值 **this.key** 设置依旧为当前方向, 如果不是相反方向,则设置为新的方向.
+    ```javascript
+    // 方向操控
+    document.body.onkeydown = ev => {
+        switch (ev.key) {
+                /* 判断按下的方向,如果与当前方向相反,则无效 */
+            case 'ArrowUp':
+                if (this.currentDirection === 'ArrowDown') {
+                    this.key = 'ArrowDown'
+                } else {
+                    this.key = 'ArrowUp'
+                }
+                break
+            case 'ArrowLeft':
+                if (this.currentDirection === 'ArrowRight') {
+                    this.key = 'ArrowRight'
+                } else {
+                    this.key = 'ArrowLeft'
+                }
+                break
+            case 'ArrowDown':
+                if (this.currentDirection === 'ArrowUp') {
+                    this.key = 'ArrowUp'
+                } else {
+                    this.key = 'ArrowDown'
+                }
+                break
+            case 'ArrowRight':
+                if (this.currentDirection === 'ArrowLeft') {
+                    this.key = 'ArrowLeft'
+                } else {
+                    this.key = 'ArrowRight'
+                }
+                break
+            default:
+                this.key = 'ArrowRight'
+        }
+    }
+    ```
+    - 在 **snakeMove()** 中, 移动蛇节, 通过判断 **this.key** 的方向值,设置对应方向的(x,y)值. 并更新当前方向值.
+    ```javascript
+     snakeMove() {
+             /*
+             * 1. 移动之前获取当前 snake 的最后一个节点
+             * 2. 当 snake 吃到食物时, 添加该节点至 snake 最后
+             * 3. 蛇节每个节点等于上一个节点的位置.
+             * 4. 蛇头通过方向控制 (x, y)
+             * */
+             this.originPosition = {
+                 x: this.bodies[this.bodies.length - 1].x,
+                 y: this.bodies[this.bodies.length - 1].y,
+                 type: 0
+             }
+     
+             // 蛇节移动
+             for (let i = this.bodies.length - 1; i > 0; i--) {
+                 this.bodies[i].x = this.bodies[i - 1].x
+                 this.bodies[i].y = this.bodies[i - 1].y
+             }
+     
+             // 蛇头移动
+             let oHead = this.bodies[0]
+             switch (this.key) {
+                 case 'ArrowUp':
+                     oHead.y -= 1
+                     this.currentDirection = 'ArrowUp'
+                     break
+                 case 'ArrowRight':
+                     oHead.x += 1
+                     this.currentDirection = 'ArrowRight'
+                     break
+                 case 'ArrowDown':
+                     oHead.y += 1
+                     this.currentDirection = 'ArrowDown'
+                     break
+                 case 'ArrowLeft':
+                     oHead.x -= 1
+                     this.currentDirection = 'ArrowLeft'
+                     break
+                 default:
+                     oHead.x += 1
+                     break
+             }
+         }
+    ```
  
+- 判断边界撞墙游戏结束, 撞到自身时游戏结束.
+    ```javascript
+    inspection() {
+        let head = this.bodies[0]
+        /* 撞墙GG */
+        if (head.x >= this.col || head.y >= this.row || head.x < 0 || head.y < 0) {
+            alert('苦海无涯, 回头是岸~')
+            clearInterval(this.timer)
+            return false
+        }
+        /* 自杀GG */
+        // 最少四个才可能吃到自己
+        for (let i = 4; i < this.bodies.length; i++) {
+            if (head.x === this.bodies[i].x && head.y === this.bodies[i].y) {
+                alert('本是同根生,相煎何太急~')
+                clearInterval(this.timer)
+                return false
+            }
+        }
+
+        /* 吃食物 */
+        // 判定当前头坐标与食物坐标
+        if (head.x === this.foodCoordinate.x && head.y === this.foodCoordinate.y) {
+            // 1.删除当前食物
+            this.food.parentNode.removeChild(this.food);
+
+            //2. 生成新的食物
+            this.foodRender()
+
+            // 3.蛇身加1
+            this.bodies.push(this.originPosition)
+        }
+        return true
+    }
+    ```
+  
