@@ -61,7 +61,8 @@ JavaScript 实现贪吃蛇
      }
     ```
   
-- 实现数组网格地图, 并添加初始化的 snake
+- ~~实现数组网格地图, 并添加初始化的 snake~~错误实现
+- **此处数组网格地图应在随机获取坐标方法内.每次刷新.否则多次移动后,数组中没有多余的值可以获取.导致错误.**
     ```javascript
       // 数组地图行数, 列数
      // 默认每一个网格宽高 50
@@ -69,13 +70,13 @@ JavaScript 实现贪吃蛇
      let col = this.col = parseInt(this.width) / 50;
      let row = this.row = parseInt(this.height) / 50;
 
-     // 创建数组网格地图
+     // 创建数组网格地图-----------------error
      this.mapArr = []
      for (let c = 0; c < col; c++) {
          for (let r = 0; r < row; r++) {
              this.mapArr.push({x: c, y: r})
          }
-     }
+     }----------------------------------error
 
      // 初始 snake
      this.bodies = [
@@ -89,10 +90,17 @@ JavaScript 实现贪吃蛇
     - 通过 **generatePlace()** 方法, 将 snake 的坐标值在 **地图网格数组** 中删除, 随机获取剩下数组的索引值, 根据索引获得 (x, y) 的坐标值.
     - 在 **foodRender()** 方法中, 根据 generatePlace() 中获取的坐标值, 设置 food 在 map 中的位置.
     - 最后, 在 constructor 中调用 **this.foodRender()** 方法, 生成 food
-    
+    - **解决错误: 创建数组网格放在该方法内,每次获取全新的数组网格,删除蛇身部分.随机获取坐标值.**
     ```javascript
       // 1.生成食物随机坐标
      generatePlace() {
+          // 0. 创建数组网格地图
+         this.mapArr = []
+         for (let c = 0; c < this.col; c++) {
+             for (let r = 0; r < this.row; r++) {
+                 this.mapArr.push({x: c, y: r})
+             }
+         }
          // 1.查询 snake 当前在数组地图中的索引, 根据索引将 snake 从数组网格地图中删除
          this.bodies.forEach(item => {
              let snakeBody = {x: item.x, y: item.y}
@@ -107,6 +115,7 @@ JavaScript 实现贪吃蛇
  
          // 3. 解构获取坐标值返回
          let {x,y} = this.mapArr[randomIndex];
+         // 如果数组网格在实例属性中定义,多次移动后,x,y值无法获取.
          return {x,y}
      }
  
@@ -294,6 +303,7 @@ JavaScript 实现贪吃蛇
     }
     ```
   
-## 待优化问题
+## 首次错误问题
 
-- 以当前宽高为600为例, 测试多次, 当蛇节过长时, 无法获取新 food 的坐标值.猜测是计算坐标的方式太过复杂..有待改进....  
+- 当移动多次后, 报错无法获取值, 因为获取坐标值时,在数组网格中删除当前蛇对应的坐标, 但是并没有刷新当前网格,所以导致多次后无法获取值.
+- 数组网格的定义不能在实例属性中定义,应定义在随机获取食物坐标方法内.

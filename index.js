@@ -24,6 +24,14 @@ class Snake {
         let col = this.col = parseInt(this.width) / 50;
         let row = this.row = parseInt(this.height) / 50;
 
+        // 创建数组网格地图
+        /*this.mapArr = []
+        for (let c = 0; c < col; c++) {
+            for (let r = 0; r < row; r++) {
+                this.mapArr.push({x: c, y: r})
+            }
+        }*/
+
         // 初始 snake
         this.bodies = [
             {x: 3, y: 1, type: 1},
