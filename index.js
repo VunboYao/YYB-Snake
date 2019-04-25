@@ -24,14 +24,6 @@ class Snake {
         let col = this.col = parseInt(this.width) / 50;
         let row = this.row = parseInt(this.height) / 50;
 
-        // 创建数组网格地图
-        this.mapArr = []
-        for (let c = 0; c < col; c++) {
-            for (let r = 0; r < row; r++) {
-                this.mapArr.push({x: c, y: r})
-            }
-        }
-
         // 初始 snake
         this.bodies = [
             {x: 3, y: 1, type: 1},
@@ -88,6 +80,13 @@ class Snake {
 
     // 1.生成食物随机坐标
     generatePlace() {
+        //0. 创建数组网格地图
+        this.mapArr = []
+        for (let c = 0; c < this.col; c++) {
+            for (let r = 0; r < this.row; r++) {
+                this.mapArr.push({x: c, y: r})
+            }
+        }
         // 1.查询 snake 当前在数组地图中的索引, 根据索引将 snake 从数组网格地图中删除
         this.bodies.forEach(item => {
             let snakeBody = {x: item.x, y: item.y}
@@ -102,6 +101,7 @@ class Snake {
 
         // 3. 解构获取坐标值返回
         let {x, y} = this.mapArr[randomIndex];
+        console.log(this.mapArr);
         return {x, y}
     }
 
