@@ -1,6 +1,8 @@
 # YYB-Snake
 JavaScript 实现贪吃蛇
 
+[Demo地址](https://codepen.io/VunboYao/pen/PgXazO)
+
 ## 实现思路
 - 生成地图, 食物, snake
 - 食物的随机显示, 并且与 snake 不重合
